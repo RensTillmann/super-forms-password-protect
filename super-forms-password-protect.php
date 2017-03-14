@@ -39,7 +39,16 @@ if(!class_exists('SUPER_Password_Protect')) :
         */
         public $version = '1.0.0';
 
-        
+
+        /**
+         * @var string
+         *
+         *  @since      1.0.0
+        */
+        public $add_on_slug = 'password_protect';
+        public $add_on_name = 'Password Protect';
+
+
         /**
          * @var SUPER_Password_Protect The single instance of the class
          *
@@ -122,12 +131,15 @@ if(!class_exists('SUPER_Password_Protect')) :
         */
         private function init_hooks() {
             
+            register_deactivation_hook( __FILE__, array( $this, 'deactivate' ) );
+
+            // Filters since 1.0.0
+            add_filter( 'super_after_activation_message_filter', array( $this, 'activation_message' ), 10, 2 );
+
             if ( $this->is_request( 'frontend' ) ) {
                 
                 // Filters since 1.0.0
                 add_filter( 'super_form_before_do_shortcode_filter', array( $this, 'locked_out_user_msg' ), 10, 2 );
-
-                // Actions since 1.0.0
 
             }
             
@@ -135,20 +147,81 @@ if(!class_exists('SUPER_Password_Protect')) :
                 
                 // Filters since 1.0.0
                 add_filter( 'super_settings_after_smtp_server_filter', array( $this, 'add_settings' ), 10, 2 );
+				add_filter( 'super_settings_end_filter', array( $this, 'activation' ), 100, 2 );
 
                 // Actions since 1.0.0
+                add_action( 'init', array( $this, 'update_plugin' ) );
 
             }
             
             if ( $this->is_request( 'ajax' ) ) {
-
-                // Filters since 1.0.0
 
                 // Actions since 1.0.0
                 add_action( 'super_before_sending_email_hook', array( $this, 'before_sending_email' ) );
 
             }
             
+        }
+
+
+        /**
+         * Automatically update plugin from the repository
+         *
+         *  @since      1.0.0
+        */
+        function update_plugin() {
+            if( defined('SUPER_PLUGIN_DIR') ) {
+                require_once ( SUPER_PLUGIN_DIR . '/includes/admin/update-super-forms.php' );
+                $plugin_remote_path = 'http://f4d.nl/super-forms/';
+                $plugin_slug = plugin_basename( __FILE__ );
+                new SUPER_WP_AutoUpdate( $this->version, $plugin_remote_path, $plugin_slug, '', '', $this->add_on_slug );
+            }
+        }
+
+
+        /**
+         * Add the activation under the "Activate" TAB
+         * 
+         * @since       1.0.0
+        */
+        public function activation($array, $data) {
+            if (method_exists('SUPER_Forms','add_on_activation')) {
+                return SUPER_Forms::add_on_activation($array, $this->add_on_slug, $this->add_on_name);
+            }else{
+                return $array;
+            }
+        }
+
+
+        /**  
+         *  Deactivate
+         *
+         *  Upon plugin deactivation delete activation
+         *
+         *  @since      1.0.0
+         */
+        public static function deactivate(){
+            if (method_exists('SUPER_Forms','add_on_deactivate')) {
+                SUPER_Forms::add_on_deactivate(SUPER_Zapier()->add_on_slug);
+            }
+        }
+
+
+        /**
+         * Check license and show activation message
+         * 
+         * @since       1.0.0
+        */
+        public function activation_message( $activation_msg, $data ) {
+            if (method_exists('SUPER_Forms','add_on_activation_message')) {
+                $settings = $data['settings'];
+                if( ((isset($settings['password_protect'])) && ($settings['password_protect']=='true') ) ||
+                	((isset($settings['password_protect_roles'])) && ($settings['password_protect_roles']=='true') ) ||
+                	((isset($settings['password_protect_login'])) && ($settings['password_protect_login']=='true') ) ) {
+                    return SUPER_Forms::add_on_activation_message($activation_msg, $this->add_on_slug, $this->add_on_name);
+                }
+            }
+            return $activation_msg;
         }
 
 
@@ -210,27 +283,31 @@ if(!class_exists('SUPER_Password_Protect')) :
 
                 if ( SUPER_Password_Protect()->is_request( 'ajax' ) ) {
                     
-                    // Before we proceed, lets check if we have a password field
-                    if( !isset( $atts['data']['password'] ) ) {
-                        $msg = __( 'We couldn\'t find the <strong>password</strong> field which is required in order to password protect the form. Please <a href="' . get_admin_url() . 'admin.php?page=super_create_form&id=' . absint( $atts['id'] ) . '">edit</a> your form and try again', 'super-forms' );
-                        SUPER_Common::output_error(
-                            $error = true,
-                            $msg = $msg,
-                            $redirect = null
-                        );
-                    }
+                    if ( !SUPER_Password_Protect()->is_request( 'admin' ) ) {
+	                    // Before we proceed, lets check if we have a password field
+	                    if( !isset( $atts['data']['password'] ) ) {
+	                        $msg = __( 'We couldn\'t find the <strong>password</strong> field which is required in order to password protect the form. Please <a href="' . get_admin_url() . 'admin.php?page=super_create_form&id=' . absint( $atts['id'] ) . '">edit</a> your form and try again', 'super-forms' );
+	                        SUPER_Common::output_error(
+	                            $error = true,
+	                            $msg = $msg,
+	                            $redirect = null
+	                        );
+	                    }
+	                }
 
                     // Now lets check if the passwords are incorrect
-                    if( $atts['data']['password']['value']!=$atts['settings']['password_protect_password'] ) {
-                        if( !isset( $atts['settings']['password_protect_incorrect_msg'] ) ) {
-                            $atts['settings']['password_protect_incorrect_msg'] = __( 'Incorrect password, please try again!', 'super-forms' );
-                        }
-                        SUPER_Common::output_error(
-                            $error = true,
-                            $msg = $atts['settings']['password_protect_incorrect_msg'],
-                            $redirect = null
-                        );               
-                    }
+					if( ( (isset($_REQUEST['action'])) && ($_REQUEST['action']!='super_load_preview') ) || ( !isset($_REQUEST['action']) ) ) {
+						if( $atts['data']['password']['value']!=$atts['settings']['password_protect_password'] ) {
+	                        if( !isset( $atts['settings']['password_protect_incorrect_msg'] ) ) {
+	                            $atts['settings']['password_protect_incorrect_msg'] = __( 'Incorrect password, please try again!', 'super-forms' );
+	                        }
+	                        SUPER_Common::output_error(
+	                            $error = true,
+	                            $msg = $atts['settings']['password_protect_incorrect_msg'],
+	                            $redirect = null
+	                        );               
+	                    }
+	                }
                   
                 }
 
