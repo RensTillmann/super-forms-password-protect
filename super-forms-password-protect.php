@@ -425,6 +425,7 @@ if(!class_exists('SUPER_Password_Protect')) :
             $reg_roles = $roles;
             unset($reg_roles['']);
             $array['password_protect'] = array(        
+                'hidden' => 'settings',
                 'name' => __( 'Password Protect', 'super-forms' ),
                 'label' => __( 'Password Protect Settings', 'super-forms' ),
                 'fields' => array(
