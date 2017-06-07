@@ -296,7 +296,7 @@ if(!class_exists('SUPER_Password_Protect')) :
 	                }
 
                     // Now lets check if the passwords are incorrect
-					if( ( (isset($_REQUEST['action'])) && ($_REQUEST['action']!='super_load_preview') ) || ( !isset($_REQUEST['action']) ) ) {
+					if( (isset($_REQUEST['action'])) && ($_REQUEST['action']=='super_send_email') ) {
 						if( $atts['data']['password']['value']!=$atts['settings']['password_protect_password'] ) {
 	                        if( !isset( $atts['settings']['password_protect_incorrect_msg'] ) ) {
 	                            $atts['settings']['password_protect_incorrect_msg'] = __( 'Incorrect password, please try again!', 'super-forms' );
