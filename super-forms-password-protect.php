@@ -11,7 +11,7 @@
  * Plugin Name: Super Forms - Password Protect
  * Plugin URI:  http://codecanyon.net/item/super-forms-drag-drop-form-builder/13979866
  * Description: Password protect your forms or lock out specific user roles from submitting the form
- * Version:     1.0.0
+ * Version:     1.0.1
  * Author:      feeling4design
  * Author URI:  http://codecanyon.net/user/feeling4design
 */
@@ -37,7 +37,7 @@ if(!class_exists('SUPER_Password_Protect')) :
          *
          *	@since		1.0.0
         */
-        public $version = '1.0.0';
+        public $version = '1.0.1';
 
 
         /**
@@ -345,19 +345,34 @@ if(!class_exists('SUPER_Password_Protect')) :
                         if( !isset( $atts['settings']['password_protect_login_msg'] ) ) {
                             $atts['settings']['password_protect_login_msg'] = 'You do not have permission to submit this form!';
                         }
-                        if ( SUPER_Password_Protect()->is_request( 'ajax' ) ) {
-                            SUPER_Common::output_error(
-                                $error = true,
-                                $msg = $atts['settings']['password_protect_login_msg'],
-                                $redirect = null
-                            );               
+                        
+                        // @since 1.0.1 - show only after form submit
+                        if( !isset( $atts['settings']['password_protect_show_login_after_submit'] ) ) $atts['settings']['password_protect_show_login_after_submit'] = '';
+                        if( $atts['settings']['password_protect_show_login_after_submit']=='true' ) {
+                            if ( SUPER_Password_Protect()->is_request( 'ajax' ) ) {
+                                if( (isset($_REQUEST['action'])) && ($_REQUEST['action']=='super_send_email') ) {
+                                    SUPER_Common::output_error(
+                                        $error = true,
+                                        $msg = $atts['settings']['password_protect_login_msg'],
+                                        $redirect = null
+                                    );
+                                }             
+                            }
+                        }else{
+                            if ( SUPER_Password_Protect()->is_request( 'ajax' ) ) {
+                                SUPER_Common::output_error(
+                                    $error = true,
+                                    $msg = $atts['settings']['password_protect_login_msg'],
+                                    $redirect = null
+                                );               
+                            }
+                            $msg  = '<div class="super-msg error">';
+                            $msg .= $atts['settings']['password_protect_login_msg'];
+                            $msg .= '<span class="close"></span>';
+                            $msg .= '</div>';
+                            $result = $msg.$result;
+                            return $result;
                         }
-                        $msg  = '<div class="super-msg error">';
-                        $msg .= $atts['settings']['password_protect_login_msg'];
-                        $msg .= '<span class="close"></span>';
-                        $msg .= '</div>';
-                        $result = $msg.$result;
-                        return $result;
                     }
 
                     return $result;
@@ -547,6 +562,20 @@ if(!class_exists('SUPER_Password_Protect')) :
                         'parent' => 'password_protect_show_login_msg',
                         'filter_value' => 'true',
                     ),
+
+                    // @since 1.0.1 - option to only display the error message after form submit (instead of both on form init and submit)
+                    'password_protect_show_login_after_submit' => array(
+                        'desc' => __( 'Only display the message after the user tried to submit the form', 'super-forms' ), 
+                        'default' => SUPER_Settings::get_value( 0, 'password_protect_show_login_after_submit', $settings['settings'], 'true' ),
+                        'type' => 'checkbox',
+                        'values' => array(
+                            'true' => __( 'Only display after user tried to submit the form', 'super-forms' ),
+                        ),
+                        'filter'=>true,
+                        'parent' => 'password_protect_show_login_msg',
+                        'filter_value' => 'true',
+                    ),
+
 
                 )
             );

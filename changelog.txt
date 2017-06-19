@@ -1,2 +1,5 @@
+Jun 20, 2017 - Version 1.0.1
+- Added: option to display error message regarding user not being logged in after the form is submitted (instead of on form init/pageload)
+
 Mar 17, 2017 - Version 1.0.0
 - Initial release!
