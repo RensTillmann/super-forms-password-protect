@@ -11,7 +11,7 @@
  * Plugin Name: Super Forms - Password Protect
  * Plugin URI:  http://codecanyon.net/item/super-forms-drag-drop-form-builder/13979866
  * Description: Password protect your forms or lock out specific user roles from submitting the form
- * Version:     1.0.1
+ * Version:     1.0.2
  * Author:      feeling4design
  * Author URI:  http://codecanyon.net/user/feeling4design
 */
@@ -37,7 +37,7 @@ if(!class_exists('SUPER_Password_Protect')) :
          *
          *	@since		1.0.0
         */
-        public $version = '1.0.1';
+        public $version = '1.0.2';
 
 
         /**
@@ -139,7 +139,10 @@ if(!class_exists('SUPER_Password_Protect')) :
             if ( $this->is_request( 'frontend' ) ) {
                 
                 // Filters since 1.0.0
-                add_filter( 'super_form_before_do_shortcode_filter', array( $this, 'locked_out_user_msg' ), 10, 2 );
+                add_filter( 'super_form_before_do_shortcode_filter', array( $this, 'hide_form' ), 10, 2 );
+
+                // Filters since 1.0.2
+                add_filter( 'super_form_before_first_form_element_filter', array( $this, 'locked_msg' ), 10, 2 );
 
             }
             
@@ -236,16 +239,16 @@ if(!class_exists('SUPER_Password_Protect')) :
                 'data' => $atts['post']['data'],
                 'settings' => $atts['settings']
             );
-            SUPER_Password_Protect()->locked_out_user_msg( '', $atts );
+            SUPER_Password_Protect()->locked_msg( '', $atts );
         }
 
 
         /**
-         * Display message to locked out users
+         * Hide form if needed
          *
-         *  @since      1.0.0
+         *  @since      1.0.2
         */
-        public static function locked_out_user_msg( $result, $atts ) {
+        public static function hide_form( $result, $atts ) {
             
             // Check if we need to hide the form
             if( !isset( $atts['settings']['password_protect_roles'] ) ) {
@@ -256,9 +259,24 @@ if(!class_exists('SUPER_Password_Protect')) :
 	                $atts['settings']['password_protect_hide'] = '';
 	            }
 	            if( $atts['settings']['password_protect_hide']=='true' ) {
-	            	$result = '';
+                    // Check if the users doesn't have the propper user role
+                    global $current_user;
+                    if( (!isset( $atts['settings']['password_protect_user_roles'] )) || ($atts['settings']['password_protect_user_roles']=='') ) {
+                        $atts['settings']['password_protect_user_roles'] = array();
+                    }
+                    $allowed_roles = $atts['settings']['password_protect_user_roles'];
+                    $allowed = false;
+                    foreach( $current_user->roles as $v ) {
+                        if( in_array( $v, $allowed_roles ) ) {
+                            $allowed = true;
+                        }
+                    }
+                    if( $allowed==false ) {
+                        return '';
+                    }
 	            }
             }
+
             if( !isset( $atts['settings']['password_protect_login'] ) ) {
                 $atts['settings']['password_protect_login'] = '';
             }
@@ -268,17 +286,26 @@ if(!class_exists('SUPER_Password_Protect')) :
 		                $atts['settings']['password_protect_login_hide'] = '';
 		            }
 		            if( $atts['settings']['password_protect_login_hide']=='true' ) {
-		            	$result = '';
+		            	return '';
 		            }
 	            }
 	        }
+            return $result;
+        }
 
+
+        /**
+         * Display message to locked out users
+         *
+         *  @since      1.0.2
+        */
+        public static function locked_msg( $result, $atts ) {
+
+            if( !isset( $atts['settings']['password_protect'] ) ) $atts['settings']['password_protect'] = '';
+            if( !isset( $atts['settings']['password_protect_login'] ) ) $atts['settings']['password_protect_login'] = '';
+            if( !isset( $atts['settings']['password_protect_roles'] ) ) $atts['settings']['password_protect_roles'] = '';
 
             // Check if password protect is enabled
-            if( !isset( $atts['settings']['password_protect'] ) ) {
-                $atts['settings']['password_protect'] = '';
-            }
-            
             if( $atts['settings']['password_protect']=='true' ) {
 
                 if ( SUPER_Password_Protect()->is_request( 'ajax' ) ) {
@@ -323,12 +350,11 @@ if(!class_exists('SUPER_Password_Protect')) :
                     }
                 }
                 if( $field_found==false ) {
-                    $msg  = '<div class="super-msg error">';
+                    $msg  = '<div class="super-msg super-error">';
                     $msg .= __( 'You have enabled password protection for this form, but we couldn\'t find a password field with the name: <strong>password</strong>. Please <a href="' . get_admin_url() . 'admin.php?page=super_create_form&id=' . absint( $atts['id'] ) . '">edit</a> your form and try again.', 'super-forms' );
                     $msg .= '<span class="close"></span>';
                     $msg .= '</div>';
-                    $result = $msg.$result;
-                    return $result;
+                    return $result.$msg;
                 }
             }
 
@@ -338,12 +364,9 @@ if(!class_exists('SUPER_Password_Protect')) :
                     if( !isset( $atts['settings']['password_protect_show_login_msg'] ) ) {
                         $atts['settings']['password_protect_show_login_msg'] = '';
                     }
-                    if( $atts['settings']['password_protect_login_hide']=='true' ) {
-                        $result = '';
-                    }
                     if( $atts['settings']['password_protect_show_login_msg']=='true' ) {
                         if( !isset( $atts['settings']['password_protect_login_msg'] ) ) {
-                            $atts['settings']['password_protect_login_msg'] = 'You do not have permission to submit this form!';
+                            $atts['settings']['password_protect_login_msg'] = __( 'You do not have permission to submit this form!', 'super-forms' );
                         }
                         
                         // @since 1.0.1 - show only after form submit
@@ -366,16 +389,25 @@ if(!class_exists('SUPER_Password_Protect')) :
                                     $redirect = null
                                 );               
                             }
-                            $msg  = '<div class="super-msg error">';
+                            $msg  = '<div class="super-msg super-error">';
                             $msg .= $atts['settings']['password_protect_login_msg'];
                             $msg .= '<span class="close"></span>';
                             $msg .= '</div>';
-                            $result = $msg.$result;
-                            return $result;
+                            return $result.$msg;
                         }
                     }
 
-                    return $result;
+                    // @since 1.0.2 - If user didn't choose any setting option at least show error to the user
+                    if ( SUPER_Password_Protect()->is_request( 'ajax' ) ) {
+                        if( (isset($_REQUEST['action'])) && ($_REQUEST['action']=='super_send_email') ) {
+                            SUPER_Common::output_error(
+                                $error = true,
+                                $msg = $atts['settings']['password_protect_login_msg'],
+                                $redirect = null
+                            );
+                        }             
+                    }
+
                 }
             }
 
@@ -385,7 +417,7 @@ if(!class_exists('SUPER_Password_Protect')) :
                     $atts['settings']['password_protect_show_msg'] = '';
                 }
                 if( !isset( $atts['settings']['password_protect_msg'] ) ) {
-                    $atts['settings']['password_protect_msg'] = 'You are currently not logged in. In order to submit the form make sure you are logged in!';
+                    $atts['settings']['password_protect_msg'] = __( 'You are currently not logged in. In order to submit the form make sure you are logged in!', 'super-forms' );
                 }
                 // Check if the users doesn't have the propper user role
                 global $current_user;
@@ -408,12 +440,11 @@ if(!class_exists('SUPER_Password_Protect')) :
                         );               
                     }
                     if( $atts['settings']['password_protect_show_msg']=='true' ) {
-                        $msg  = '<div class="super-msg error">';
+                        $msg  = '<div class="super-msg super-error">';
                         $msg .= $atts['settings']['password_protect_msg'];
                         $msg .= '<span class="close"></span>';
                         $msg .= '</div>';
-                        $result = $msg.$result;
-                        return $result;
+                        return $result.$msg;
                     }
                 }
             }
