@@ -11,7 +11,7 @@
  * Plugin Name: Super Forms - Password Protect
  * Plugin URI:  http://codecanyon.net/item/super-forms-drag-drop-form-builder/13979866
  * Description: Password protect your forms or lock out specific user roles from submitting the form
- * Version:     1.0.2
+ * Version:     1.0.3
  * Author:      feeling4design
  * Author URI:  http://codecanyon.net/user/feeling4design
 */
@@ -37,7 +37,7 @@ if(!class_exists('SUPER_Password_Protect')) :
          *
          *	@since		1.0.0
         */
-        public $version = '1.0.2';
+        public $version = '1.0.3';
 
 
         /**
@@ -155,6 +155,9 @@ if(!class_exists('SUPER_Password_Protect')) :
                 // Actions since 1.0.0
                 add_action( 'init', array( $this, 'update_plugin' ) );
 
+                // Actions since 1.0.3
+                add_action( 'all_admin_notices', array( $this, 'display_activation_msg' ) );
+                
             }
             
             if ( $this->is_request( 'ajax' ) ) {
@@ -164,6 +167,29 @@ if(!class_exists('SUPER_Password_Protect')) :
 
             }
             
+        }
+
+
+        /**
+         * Display activation message for automatic updates
+         *
+         *  @since      1.3.0
+        */
+        public function display_activation_msg() {
+            if( !class_exists('SUPER_Forms') ) {
+                echo '<div class="notice notice-error">'; // notice-success
+                    echo '<p>';
+                    echo sprintf( 
+                        __( '%sPlease note:%s You must install and activate %4$s%1$sSuper Forms%2$s%5$s in order to be able to use %1$s%s%2$s!', 'super_forms' ), 
+                        '<strong>', 
+                        '</strong>', 
+                        'Super Forms - ' . $this->add_on_name, 
+                        '<a target="_blank" href="https://codecanyon.net/item/super-forms-drag-drop-form-builder/13979866">', 
+                        '</a>' 
+                    );
+                    echo '</p>';
+                echo '</div>';
+            }
         }
 
 
@@ -290,6 +316,17 @@ if(!class_exists('SUPER_Password_Protect')) :
 		            }
 	            }
 	        }
+
+            // @since 1.0.3 - hide form from logged in users
+            if ( is_user_logged_in() ) {
+                if( !isset( $atts['settings']['password_protect_not_login_hide'] ) ) {
+                    $atts['settings']['password_protect_not_login_hide'] = '';
+                }
+                if( $atts['settings']['password_protect_not_login_hide']=='true' ) {
+                    return '';
+                }
+            }
+
             return $result;
         }
 
@@ -523,12 +560,12 @@ if(!class_exists('SUPER_Password_Protect')) :
                         'values' => $reg_roles,
                     ),
                     'password_protect_hide' => array(
-                        'desc' => __( 'Hide the form for locked out users', 'super-forms' ), 
+                        'desc' => __( 'Hide the form from locked out users', 'super-forms' ), 
                         'default' => SUPER_Settings::get_value( 0, 'password_protect_hide', $settings['settings'], '' ),
                         'type' => 'checkbox',
                         'filter'=>true,
                         'values' => array(
-                            'true' => __( 'Hide form for locked out users', 'super-forms' ),
+                            'true' => __( 'Hide form from locked out users', 'super-forms' ),
                         ),
                         'parent' => 'password_protect_roles',
                         'filter_value' => 'true',
@@ -553,6 +590,7 @@ if(!class_exists('SUPER_Password_Protect')) :
                         'parent' => 'password_protect_show_msg',
                         'filter_value' => 'true',
                     ),
+
                     'password_protect_login' => array(
                         'desc' => __( 'Allow only logged in users to submit the form', 'super-forms' ), 
                         'default' => SUPER_Settings::get_value( 0, 'password_protect_login', $settings['settings'], '' ),
@@ -563,12 +601,12 @@ if(!class_exists('SUPER_Password_Protect')) :
                         )
                     ),
                     'password_protect_login_hide' => array(
-                        'desc' => __( 'Hide the form for not logged in users', 'super-forms' ), 
+                        'desc' => __( 'Hide the form from not logged in users', 'super-forms' ), 
                         'default' => SUPER_Settings::get_value( 0, 'password_protect_login_hide', $settings['settings'], '' ),
                         'type' => 'checkbox',
                         'filter'=>true,
                         'values' => array(
-                            'true' => __( 'Hide form for not logged in users', 'super-forms' ),
+                            'true' => __( 'Hide form from not logged in users', 'super-forms' ),
                         ),
                         'parent' => 'password_protect_login',
                         'filter_value' => 'true',
@@ -607,7 +645,15 @@ if(!class_exists('SUPER_Password_Protect')) :
                         'filter_value' => 'true',
                     ),
 
-
+                    // @since 1.0.3 - option to hide form for logged in users
+                    'password_protect_not_login_hide' => array(
+                        'desc' => __( 'Hide the form from logged in users', 'super-forms' ), 
+                        'default' => SUPER_Settings::get_value( 0, 'password_protect_not_login_hide', $settings['settings'], '' ),
+                        'type' => 'checkbox',
+                        'values' => array(
+                            'true' => __( 'Hide form from logged in users', 'super-forms' ),
+                        ),
+                    ),
                 )
             );
             return $array;

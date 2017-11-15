@@ -1,3 +1,6 @@
+Nov 16, - Version 1.0.3
+- Added: Option to hide form from logged in users
+
 Jun 21, 2017 - Version 1.0.2
 - Improvement: if user didn't select option for none logged in users lockout display at least an error
 - Improvement: error message is now positioned inside the form element, so it will pickup color styles for the error message
