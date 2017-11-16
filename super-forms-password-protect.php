@@ -11,7 +11,7 @@
  * Plugin Name: Super Forms - Password Protect
  * Plugin URI:  http://codecanyon.net/item/super-forms-drag-drop-form-builder/13979866
  * Description: Password protect your forms or lock out specific user roles from submitting the form
- * Version:     1.0.3
+ * Version:     1.0.4
  * Author:      feeling4design
  * Author URI:  http://codecanyon.net/user/feeling4design
 */
@@ -37,7 +37,7 @@ if(!class_exists('SUPER_Password_Protect')) :
          *
          *	@since		1.0.0
         */
-        public $version = '1.0.3';
+        public $version = '1.0.4';
 
 
         /**
@@ -313,7 +313,7 @@ if(!class_exists('SUPER_Password_Protect')) :
 		            }
 		            if( $atts['settings']['password_protect_login_hide']=='true' ) {
 
-                        // But check if we need to display a message
+                        // @since 1.0.4 - ability to even display error message when complete form is hidden
                         if( $atts['settings']['password_protect_show_login_after_submit']!='true' ) {
                             if ( SUPER_Password_Protect()->is_request( 'ajax' ) ) {
                                 SUPER_Common::output_error(
