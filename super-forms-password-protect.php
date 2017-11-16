@@ -173,7 +173,7 @@ if(!class_exists('SUPER_Password_Protect')) :
         /**
          * Display activation message for automatic updates
          *
-         *  @since      1.3.0
+         *  @since      1.0.3
         */
         public function display_activation_msg() {
             if( !class_exists('SUPER_Forms') ) {
@@ -312,7 +312,29 @@ if(!class_exists('SUPER_Password_Protect')) :
 		                $atts['settings']['password_protect_login_hide'] = '';
 		            }
 		            if( $atts['settings']['password_protect_login_hide']=='true' ) {
-		            	return '';
+
+                        // But check if we need to display a message
+                        if( $atts['settings']['password_protect_show_login_after_submit']!='true' ) {
+                            if ( SUPER_Password_Protect()->is_request( 'ajax' ) ) {
+                                SUPER_Common::output_error(
+                                    $error = true,
+                                    $msg = $atts['settings']['password_protect_login_msg'],
+                                    $redirect = null
+                                );               
+                            }
+                            $msg  = '<div id="super-form-' . $atts['id'] . '" class="super-form super-form-' . $atts['id'] . '">';
+                                $msg .= '<div class="super-msg super-error">';
+                                $msg .= $atts['settings']['password_protect_login_msg'];
+                                $msg .= '<span class="close"></span>';
+                                $msg .= '</div>';
+                            $msg .= '</div>';
+                            if( SUPER_Forms()->form_custom_css!='' ) {
+                                $msg .= '<style type="text/css">' . SUPER_Forms()->form_custom_css . '</style>';
+                            }
+                            return $msg;
+                        }else{
+                            return '';
+                        }
 		            }
 	            }
 	        }
