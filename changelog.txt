@@ -1,4 +1,7 @@
-Nov 16, - Version 1.0.3
+Jan 29, 2018 - Version 1.0.4
+- Added: Ability to even display error message when complete form is hidden
+
+Nov 16, 2017 - Version 1.0.3
 - Added: Option to hide form from logged in users
 
 Jun 21, 2017 - Version 1.0.2
