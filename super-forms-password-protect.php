@@ -11,7 +11,7 @@
  * Plugin Name: Super Forms - Password Protect
  * Plugin URI:  http://codecanyon.net/item/super-forms-drag-drop-form-builder/13979866
  * Description: Password protect your forms or lock out specific user roles from submitting the form
- * Version:     1.0.4
+ * Version:     1.0.5
  * Author:      feeling4design
  * Author URI:  http://codecanyon.net/user/feeling4design
 */
@@ -37,7 +37,7 @@ if(!class_exists('SUPER_Password_Protect')) :
          *
          *	@since		1.0.0
         */
-        public $version = '1.0.4';
+        public $version = '1.0.5';
 
 
         /**
@@ -559,6 +559,7 @@ if(!class_exists('SUPER_Password_Protect')) :
                         'filter'=>true,
                         'parent' => 'password_protect',
                         'filter_value' => 'true',
+                        'allow_empty' => true,
                     ),
 
                     'password_protect_roles' => array(
@@ -602,6 +603,7 @@ if(!class_exists('SUPER_Password_Protect')) :
                         ),
                         'parent' => 'password_protect_roles',
                         'filter_value' => 'true',
+                        'allow_empty' => true,
                     ),
                     'password_protect_msg' => array(
                         'name' => __( 'Message for locked out users', 'super-forms' ), 
@@ -611,6 +613,7 @@ if(!class_exists('SUPER_Password_Protect')) :
                         'filter'=>true,
                         'parent' => 'password_protect_show_msg',
                         'filter_value' => 'true',
+                        'allow_empty' => true,
                     ),
 
                     'password_protect_login' => array(
@@ -643,6 +646,7 @@ if(!class_exists('SUPER_Password_Protect')) :
                         ),
                         'parent' => 'password_protect_login',
                         'filter_value' => 'true',
+                        'allow_empty' => true,
                     ),
                     'password_protect_login_msg' => array(
                         'name' => __( 'Message for not logged in users', 'super-forms' ), 
@@ -652,6 +656,7 @@ if(!class_exists('SUPER_Password_Protect')) :
                         'filter'=>true,
                         'parent' => 'password_protect_show_login_msg',
                         'filter_value' => 'true',
+                        'allow_empty' => true,
                     ),
 
                     // @since 1.0.1 - option to only display the error message after form submit (instead of both on form init and submit)
@@ -665,6 +670,7 @@ if(!class_exists('SUPER_Password_Protect')) :
                         'filter'=>true,
                         'parent' => 'password_protect_show_login_msg',
                         'filter_value' => 'true',
+                        'allow_empty' => true,
                     ),
 
                     // @since 1.0.3 - option to hide form for logged in users

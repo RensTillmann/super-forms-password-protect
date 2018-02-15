@@ -1,3 +1,6 @@
+Feb 15, 2018 - Version 1.0.5
+- Fix: Allow settings to be empty for new Super Forms versions (values that can be left empty must not be overwritten by default value)
+
 Jan 29, 2018 - Version 1.0.4
 - Added: Ability to even display error message when complete form is hidden
 
