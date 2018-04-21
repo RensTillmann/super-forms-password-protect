@@ -1,3 +1,6 @@
+Apr 22, 2018 - Version 1.0.6
+- Fix: When password field would be inside a multi-part, it will no longer think the "password" field is missing
+
 Feb 15, 2018 - Version 1.0.5
 - Fix: Allow settings to be empty for new Super Forms versions (values that can be left empty must not be overwritten by default value)
 

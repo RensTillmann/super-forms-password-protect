@@ -11,7 +11,7 @@
  * Plugin Name: Super Forms - Password Protect
  * Plugin URI:  http://codecanyon.net/item/super-forms-drag-drop-form-builder/13979866
  * Description: Password protect your forms or lock out specific user roles from submitting the form
- * Version:     1.0.5
+ * Version:     1.0.6
  * Author:      feeling4design
  * Author URI:  http://codecanyon.net/user/feeling4design
 */
@@ -37,7 +37,7 @@ if(!class_exists('SUPER_Password_Protect')) :
          *
          *	@since		1.0.0
         */
-        public $version = '1.0.5';
+        public $version = '1.0.6';
 
 
         /**
@@ -397,18 +397,13 @@ if(!class_exists('SUPER_Password_Protect')) :
                   
                 }
 
-                $field_found = false;
-                $elements = json_decode( get_post_meta( $atts['id'], '_super_elements', true ) );
-                if( $elements!=null ) {
-                    foreach( $elements as $k => $v ) {
-                        if($v->tag=='password'){
-                            if($v->data->name=='password'){
-                                $field_found = true;
-                            }
-                        }
-                    }
+                $elements = get_post_meta( absint($atts['id']), '_super_elements', true );
+                if(!is_array($elements)){
+                    $elements = json_decode( $elements, true );
                 }
-                if( $field_found==false ) {
+                $elements_json = json_encode($elements);
+                $field_found = strpos($elements_json, '"name":"password"');
+                if ($field_found === false) {
                     $msg  = '<div class="super-msg super-error">';
                     $msg .= __( 'You have enabled password protection for this form, but we couldn\'t find a password field with the name: <strong>password</strong>. Please <a href="' . get_admin_url() . 'admin.php?page=super_create_form&id=' . absint( $atts['id'] ) . '">edit</a> your form and try again.', 'super-forms' );
                     $msg .= '<span class="close"></span>';
