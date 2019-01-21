@@ -231,7 +231,7 @@ if(!class_exists('SUPER_Password_Protect')) :
          */
         public static function deactivate(){
             if (method_exists('SUPER_Forms','add_on_deactivate')) {
-                SUPER_Forms::add_on_deactivate(SUPER_Zapier()->add_on_slug);
+                SUPER_Forms::add_on_deactivate(SUPER_Password_Protect()->add_on_slug);
             }
         }
 
